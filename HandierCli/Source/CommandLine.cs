@@ -1,5 +1,6 @@
 ﻿// Copyright Matteo Beltrame
 
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace HandierCli;
@@ -10,11 +11,11 @@ public class CommandLine
 
     private readonly List<string> exitCommands;
 
-    private Action<string>? onUnrecognized;
+    private Action<CommandLineLogger, string>? onUnrecognized;
 
     private string symbol;
 
-    public CliLogger Logger { get; private set; }
+    public CommandLineLogger Logger { get; private set; }
 
     public bool IsExecutingCommand { get; private set; } = false;
 
@@ -22,7 +23,7 @@ public class CommandLine
 
     private CommandLine()
     {
-        Logger = new CliLogger(this);
+        Logger = new CommandLineLogger(this);
         commands = new List<Command>();
         exitCommands = new List<string>();
         symbol = "> ";
@@ -39,7 +40,7 @@ public class CommandLine
         return this;
     }
 
-    public async Task Run()
+    public async Task RunAsync()
     {
         IsRunning = true;
         var command = string.Empty;
@@ -47,7 +48,7 @@ public class CommandLine
         {
             System.Console.Write(symbol);
             command = System.Console.ReadLine();
-            if (command == null) command = string.Empty;
+            command ??= string.Empty;
             command = command.Trim();
             if (ShouldExit(command))
             {
@@ -56,10 +57,12 @@ public class CommandLine
             var argsList = ParseString(command);
             if (argsList != null && argsList.Length > 0)
             {
-                Command? routine = commands.Find(s => s.Key.Equals(argsList[0]));
+                var routine = commands.Find(s => s.Key.Equals(argsList[0]));
                 if (routine == null)
                 {
-                    onUnrecognized?.Invoke(argsList[0]);
+                    IsExecutingCommand = true;
+                    onUnrecognized?.Invoke(Logger, argsList[0]);
+                    IsExecutingCommand = false;
                 }
                 else
                 {
@@ -91,7 +94,7 @@ public class CommandLine
 
     private static string[] ParseString(string str)
     {
-        List<string> retval = new List<string>();
+        var retval = new List<string>();
         if (string.IsNullOrWhiteSpace(str)) return retval.ToArray();
         var ndx = 0;
         var s = string.Empty;
@@ -148,7 +151,18 @@ public class CommandLine
             return this;
         }
 
-        public Builder OnUnrecognized(Action<string> callback)
+        public Builder RegisterHelpCommand(Command? helpCommandOverride = null)
+        {
+            helpCommandOverride ??= Command.Factory("help")
+                    .InhibitHelp()
+                    .Description("display the available commands")
+                    .ArgumentsHandler(ArgumentsHandler.Factory())
+                    .Add((handler) => commandLine.Logger.Log(LogLevel.Information, commandLine.Print()));
+            commandLine.Register(helpCommandOverride);
+            return this;
+        }
+
+        public Builder OnUnrecognized(Action<CommandLineLogger, string> callback)
         {
             commandLine.onUnrecognized = callback;
             return this;
@@ -157,28 +171,28 @@ public class CommandLine
         public CommandLine Build() => commandLine;
     }
 
-    public class CliLogger : Logger
+    public class CommandLineLogger : BaseLogger
     {
         private readonly CommandLine cli;
 
-        public CliLogger(CommandLine cli)
+        public CommandLineLogger(CommandLine cli)
         {
             this.cli = cli;
         }
 
-        public override void LogInfo(string log, ConsoleColor color, bool newLine = true)
+        protected override void Log(string log, ConsoleColor color, bool newLine = true)
         {
             if (!cli.IsExecutingCommand && cli.IsRunning)
             {
                 ConsoleExtensions.ClearConsoleLine();
-                base.LogInfo(log, color, newLine);
+                base.Log(log, color, newLine);
                 if (!newLine) System.Console.WriteLine();
                 System.Console.Write(cli.symbol);
                 System.Console.Out.Flush();
             }
             else
             {
-                base.LogInfo(log, color, newLine);
+                base.Log(log, color, newLine);
             }
         }
     }

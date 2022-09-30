@@ -54,18 +54,18 @@ public class ArgumentsHandler
         }
         else
         {
-            StringBuilder builder = new StringBuilder();
-            foreach (Argument argument in Positionals)
+            var builder = new StringBuilder();
+            foreach (var argument in Positionals)
             {
                 builder.Append(argument.ToString());
                 builder.Append(Environment.NewLine);
             }
-            foreach (Argument argument in Keys)
+            foreach (var argument in Keys)
             {
                 builder.Append(argument.ToString());
                 builder.Append(Environment.NewLine);
             }
-            foreach (Argument argument in Flags)
+            foreach (var argument in Flags)
             {
                 builder.Append(argument.ToString());
                 builder.Append(Environment.NewLine);
@@ -82,8 +82,8 @@ public class ArgumentsHandler
         positionalArgs.Clear();
         flagArgs.Clear();
 
-        List<string> listArgs = args.ToList();
-        foreach (Argument arg in Keys)
+        var listArgs = args.ToList();
+        foreach (var arg in Keys)
         {
             var index = listArgs.FindIndex(0, listArgs.Count, a => a.Equals(arg.Key));
             if (index >= 0 && index <= listArgs.Count - 2)
@@ -93,7 +93,7 @@ public class ArgumentsHandler
             }
             listArgs.RemoveAll(s => s.Equals(arg.Key));
         }
-        foreach (Argument arg in Flags)
+        foreach (var arg in Flags)
         {
             if (listArgs.Contains(arg.Key))
             {
@@ -138,14 +138,14 @@ public class ArgumentsHandler
 
         public Builder Positional(string description = "")
         {
-            Argument arg = new Argument() { Key = handler.Positionals.Count, Description = description };
+            var arg = new Argument() { Key = handler.Positionals.Count, Description = description };
             handler.Positionals.Add(arg);
             return this;
         }
 
         public Builder Keyed(string key, string description = "")
         {
-            Argument arg = new Argument() { Key = key, Description = description };
+            var arg = new Argument() { Key = key, Description = description };
             handler.Keys.Add(arg);
             return this;
         }
@@ -158,7 +158,7 @@ public class ArgumentsHandler
 
         public Builder Flag(string flag, string description = "")
         {
-            Argument arg = new Argument() { Key = flag, Description = description };
+            var arg = new Argument() { Key = flag, Description = description };
             handler.Flags.Add(arg);
             return this;
         }

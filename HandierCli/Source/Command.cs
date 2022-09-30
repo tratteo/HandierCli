@@ -1,10 +1,6 @@
 ﻿// Copyright Matteo Beltrame
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HandierCli;
 
@@ -83,14 +79,14 @@ public class Command : IEquatable<Command>
     private async Task ExecuteParallel()
     {
         List<Task> tasks = new();
-        foreach (Action<ArgumentsHandler> action in syncActions)
+        foreach (var action in syncActions)
         {
             if (argsHandler != null)
             {
                 action?.Invoke(argsHandler);
             }
         }
-        foreach (Func<ArgumentsHandler, Task> del in asyncActions)
+        foreach (var del in asyncActions)
         {
             if (del != null && argsHandler != null)
             {

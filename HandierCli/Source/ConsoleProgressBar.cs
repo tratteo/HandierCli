@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+namespace HandierCli;
+
 /// <summary>
 ///   Console progress bar. Credits to Daniel Wolf, MIT License
 /// </summary>
@@ -7,8 +9,8 @@ public class ConsoleProgressBar : IDisposable, IProgress<double>
 {
     private readonly TimeSpan animationInterval;
     private readonly Timer timer;
-    private int blockCount;
-    private string animation;
+    private readonly int blockCount;
+    private readonly string animation;
     private double currentProgress;
     private string currentText = string.Empty;
     private bool disposed;
@@ -43,6 +45,7 @@ public class ConsoleProgressBar : IDisposable, IProgress<double>
             disposed = true;
             UpdateText(string.Empty);
         }
+        GC.SuppressFinalize(this);
     }
 
     private void TimerHandler(object state)
@@ -51,9 +54,9 @@ public class ConsoleProgressBar : IDisposable, IProgress<double>
         {
             if (disposed) return;
 
-            int progressBlockCount = (int)(currentProgress * blockCount);
-            int percent = (int)(currentProgress * 100);
-            string text = string.Format("[{0}{1}] {2,3}% {3}",
+            var progressBlockCount = (int)(currentProgress * blockCount);
+            var percent = (int)(currentProgress * 100);
+            var text = string.Format("[{0}{1}] {2,3}% {3}",
                 new string('#', progressBlockCount), new string('-', blockCount - progressBlockCount),
                 percent,
                 animation[animationIndex++ % animation.Length]);
@@ -66,22 +69,22 @@ public class ConsoleProgressBar : IDisposable, IProgress<double>
     private void UpdateText(string text)
     {
         // Get length of common portion
-        int commonPrefixLength = 0;
-        int commonLength = Math.Min(currentText.Length, text.Length);
+        var commonPrefixLength = 0;
+        var commonLength = Math.Min(currentText.Length, text.Length);
         while (commonPrefixLength < commonLength && text[commonPrefixLength] == currentText[commonPrefixLength])
         {
             commonPrefixLength++;
         }
 
         // Backtrack to the first differing character
-        StringBuilder outputBuilder = new StringBuilder();
+        var outputBuilder = new StringBuilder();
         outputBuilder.Append('\b', currentText.Length - commonPrefixLength);
 
         // Output new suffix
-        outputBuilder.Append(text.Substring(commonPrefixLength));
+        outputBuilder.Append(text.AsSpan(commonPrefixLength));
 
         // If the new text is shorter than the old one: delete overlapping characters
-        int overlapCount = currentText.Length - text.Length;
+        var overlapCount = currentText.Length - text.Length;
         if (overlapCount > 0)
         {
             outputBuilder.Append(' ', overlapCount);
