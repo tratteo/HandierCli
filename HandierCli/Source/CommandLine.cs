@@ -15,6 +15,8 @@ public class CommandLine
 
     private string symbol;
 
+    private bool canReceiveCommands;
+
     public CommandLineLogger Logger { get; private set; }
 
     public bool IsExecutingCommand { get; private set; } = false;
@@ -24,6 +26,7 @@ public class CommandLine
     private CommandLine()
     {
         Logger = new CommandLineLogger(this);
+        canReceiveCommands = true;
         commands = new List<Command>();
         exitCommands = new List<string>();
         symbol = "> ";
@@ -40,16 +43,31 @@ public class CommandLine
         return this;
     }
 
+    public void CanReceiveCommands(bool state)
+    {
+        canReceiveCommands = state;
+        if (canReceiveCommands)
+        {
+            Console.Out.Flush();
+            Console.WriteLine();
+            Console.Write(symbol);
+        }
+    }
+
     public async Task RunAsync()
     {
         IsRunning = true;
         var command = string.Empty;
         while (!ShouldExit(command))
         {
-            System.Console.Write(symbol);
-            command = System.Console.ReadLine();
+            if (canReceiveCommands)
+            {
+                Console.Write(symbol);
+            }
+            command = Console.ReadLine();
             command ??= string.Empty;
             command = command.Trim();
+            if (!canReceiveCommands) continue;
             if (ShouldExit(command))
             {
                 return;
@@ -182,13 +200,13 @@ public class CommandLine
 
         protected override void Log(string log, ConsoleColor color, bool newLine = true)
         {
-            if (!cli.IsExecutingCommand && cli.IsRunning)
+            if (!cli.IsExecutingCommand && cli.IsRunning && cli.canReceiveCommands)
             {
                 ConsoleExtensions.ClearConsoleLine();
                 base.Log(log, color, newLine);
                 if (!newLine) System.Console.WriteLine();
-                System.Console.Write(cli.symbol);
-                System.Console.Out.Flush();
+                Console.Write(cli.symbol);
+                Console.Out.Flush();
             }
             else
             {

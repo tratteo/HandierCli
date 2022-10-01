@@ -23,17 +23,17 @@ public class BaseLogger : ILogger
     protected virtual void Log(string log, ConsoleColor color, bool newLine = true)
     {
         var currentColor = System.Console.ForegroundColor;
-        System.Console.ForegroundColor = color;
+        Console.ForegroundColor = color;
         if (newLine)
         {
-            System.Console.WriteLine(log);
+            Console.WriteLine(log);
         }
         else
         {
-            System.Console.Write(log);
+            Console.Write(log);
         }
-        System.Console.ForegroundColor = currentColor;
-        System.Console.Out.Flush();
+        Console.ForegroundColor = currentColor;
+        Console.Out.Flush();
     }
 
     private ConsoleColor GetColorByLogLevel(LogLevel level)

@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>$(VersionPrefix)1.1.0</Version>
+    <Version>$(VersionPrefix)1.1.1</Version>
     <Authors>tratteo</Authors>
     <Description>A package that allows for fast creation of command line interfaces functionalities</Description>
     <RepositoryUrl>https://github.com/tratteo/HandierCli</RepositoryUrl>

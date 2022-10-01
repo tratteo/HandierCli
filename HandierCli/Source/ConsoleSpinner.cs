@@ -2,14 +2,14 @@
 
 namespace HandierCli;
 
-public class ConsoleAwaiter
+public class ConsoleSpinner
 {
     private readonly List<string> frames;
     private string info;
     private float deltaFrame;
     private string completedInfo;
 
-    private ConsoleAwaiter()
+    private ConsoleSpinner()
     {
         frames = new List<string>();
         info = string.Empty;
@@ -22,7 +22,7 @@ public class ConsoleAwaiter
 
     public async Task Await(Task awaiter)
     {
-        System.Console.Write(info);
+        Console.Write(info);
         await Task.Run(async () =>
         {
             while (!awaiter.IsCompleted)
@@ -31,14 +31,15 @@ public class ConsoleAwaiter
                 {
                     await Task.Delay((int)(deltaFrame * 1000));
                     ConsoleExtensions.ClearConsoleLine();
-                    System.Console.Write(info + frame);
+                    Console.Write(info + frame);
+                    Console.Out.Flush();
                 }
             }
         });
 
         ConsoleExtensions.ClearConsoleLine();
-        System.Console.WriteLine(completedInfo);
-        System.Console.Out.Flush();
+        Console.WriteLine(completedInfo);
+        Console.Out.Flush();
     }
 
     public async Task<T> Await<T>(Task<T> awaiter)
@@ -52,27 +53,28 @@ public class ConsoleAwaiter
                 {
                     await Task.Delay((int)(deltaFrame * 1000));
                     ConsoleExtensions.ClearConsoleLine();
-                    System.Console.Write(info + frame);
+                    Console.Write(info + frame);
+                    Console.Out.Flush();
                 }
             }
         });
 
         ConsoleExtensions.ClearConsoleLine();
-        System.Console.WriteLine(completedInfo);
-        System.Console.Out.Flush();
+        Console.WriteLine(completedInfo);
+        Console.Out.Flush();
         return awaiter.Result;
     }
 
     public class Builder
     {
-        private readonly ConsoleAwaiter awaiter;
+        private readonly ConsoleSpinner awaiter;
 
         public Builder()
         {
-            awaiter = new ConsoleAwaiter();
+            awaiter = new ConsoleSpinner();
         }
 
-        public static implicit operator ConsoleAwaiter(Builder builder) => builder.Build();
+        public static implicit operator ConsoleSpinner(Builder builder) => builder.Build();
 
         public Builder Info(string info)
         {
@@ -94,6 +96,6 @@ public class ConsoleAwaiter
             return this;
         }
 
-        public ConsoleAwaiter Build() => awaiter;
+        public ConsoleSpinner Build() => awaiter;
     }
 }
