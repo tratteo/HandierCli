@@ -13,9 +13,11 @@ A package that allows for fast creation of command line interface functionalitie
 - [Creating the CLI](#creating-the-cli)
 - [Commands](#commands)
   - [Command callbacks](#command-callbacks)
-  - [Mandatory arguments](#mandatory-arguments)
-  - [Optional arguments](#optional-arguments)
-  - [Flags](#flag-arguments)
+  - [Arguments](#arguments)
+    - [Mandatory arguments](#mandatory-arguments)
+    - [Optional arguments](#optional-arguments)
+    - [Flags](#flag-arguments)
+    - [Domains](#arguments-domain)
 
 ### Creating the CLI
 
@@ -37,10 +39,6 @@ await cli.RunAsync();
 
 Commands are registered with the function `cli.RegisterCommand(Command.Builder command)`. Commands are created using the builder pattern.
 
-The arguments of a `Command` are defined by its `ArgumentsHandler`. Omitting the ArgumentsHandler will create a command with no arguments that runs simply when typing it into the CLI.   
-Guess what, ArgumentsHandler are build with the builder pattern too.     
-The three types of arguments can of course be mixed.
-
 Register a command that runs when **usefulcmd** is typed in the CLI.
 ```c#
 cli.Register(Command.Factory("usefulcmd")
@@ -57,9 +55,14 @@ They can be added with the  `Add(...)` method or with the `AddAsync(...)` method
 - When added in the normal version, commands are executed sequentially in an order determined by the registration order
 - When added in the async way, commands are executed in parallel and awaited
 
-
+### Arguments 
+The arguments of a `Command` are defined by its `ArgumentsHandler`. Omitting the ArgumentsHandler will create a command with no arguments that runs simply when typing it into the CLI.   
+Guess what, ArgumentsHandler are build with the builder pattern too.     
+The three types of arguments can of course be mixed.
 #### Mandatory arguments
 Mandatory (positional) arguments must be provided and are position sensitive. Their order is defined by the order in which they are registered in the builder pattern.
+
+#### Mandatory arguments
 
 Register a command that runs when **usefulcmd** is typed in the CLI with a *mandatory* argument in first position.
 ```c#
@@ -130,5 +133,28 @@ cli.Register(Command.Factory("usefulcmd")
         {
             // Flag was not provided :(
         }
+    }));
+```
+
+
+#### Arguments domain
+It is possible to define domains for the arguments. In case the provided string for the argument does not belong to the domain, the CLI will print an error and display the usage of the command the argument is referred to.
+
+Domains are defined as follows:
+- **Value collection**: in this case when adding an argument, provide also an array of possible option for the argument value
+- **Regular expressions**: in this case, a regular expression logic will be run on the argument value
+
+Register a command that runs when **usefulcmd** is typed in the CLI with two *mandatory* arguments with two different domains.
+```c#
+cli.Register(Command.Factory("usefulcmd")
+    .Description("execute an extremely useful piece of code")
+    .WithArguments(ArgumentsHandler.Factory()
+        .Mandatory("a mandatory argument", new string[] { "option1", "option2", "option3" })
+        .Mandatory("another mandatory argument", ".json$")
+    .Add(handler =>
+    {
+        string arg = handler.GetPositional(0);
+        string arg1 = handler.GetPositional(1);
+        // Useful code goes here, argument values are assured to be contained into the defined domain
     }));
 ```
