@@ -1,6 +1,8 @@
 ﻿// Copyright Matteo Beltrame
 
-namespace HandierCli;
+using HandierCli.Statics;
+
+namespace HandierCli.Progress;
 
 public class ConsoleSpinner
 {
@@ -44,7 +46,7 @@ public class ConsoleSpinner
 
     public async Task<T> Await<T>(Task<T> awaiter)
     {
-        System.Console.Write(info);
+        Console.Write(info);
         await Task.Run(async () =>
         {
             while (!awaiter.IsCompleted)

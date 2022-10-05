@@ -2,9 +2,9 @@
 
 using System.Text;
 
-namespace HandierCli;
+namespace HandierCli.CLI;
 
-public class ArgumentsHandler
+public partial class ArgumentsHandler
 {
     private readonly Dictionary<string, string> keyedArgs;
 
@@ -33,9 +33,18 @@ public class ArgumentsHandler
 
     public static Builder Factory() => new Builder();
 
+    /// <summary>
+    /// </summary>
+    /// <param name="index"> </param>
+    /// <returns> The mandatory (positional) argument at the specified index </returns>
     public string GetPositional(int index) => positionalArgs[index];
 
-    public bool GetKeyed(string key, out string value)
+    /// <summary>
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <param name="value"> </param>
+    /// <returns> Whether the key could be retrieved </returns>
+    public bool TryGetKeyed(string key, out string value)
     {
         value = string.Empty;
         if (keyedArgs.ContainsKey(key))
@@ -46,25 +55,35 @@ public class ArgumentsHandler
         return false;
     }
 
+    /// <summary>
+    ///   Default formatted printer for the handler
+    /// </summary>
+    /// <returns> </returns>
     public string Print()
     {
+        var sep = new string('-', 50) + "\n";
         if (printCallback != null)
         {
             return printCallback(this);
         }
         else
         {
-            var builder = new StringBuilder();
+            var builder = new StringBuilder("\n");
+            if (Positionals.Count > 0) builder.Append("Mandatory\n");
             foreach (var argument in Positionals)
             {
                 builder.Append(argument.ToString());
                 builder.Append(Environment.NewLine);
             }
+            if (Positionals.Count > 0) builder.Append(sep);
+            if (Keys.Count > 0) builder.Append("Optionals\n");
             foreach (var argument in Keys)
             {
                 builder.Append(argument.ToString());
                 builder.Append(Environment.NewLine);
             }
+            if (Keys.Count > 0) builder.Append(sep);
+            if (Flags.Count > 0) builder.Append("Flags\n");
             foreach (var argument in Flags)
             {
                 builder.Append(argument.ToString());
@@ -74,7 +93,47 @@ public class ArgumentsHandler
         }
     }
 
+    /// <summary>
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <returns> Whether the flag is present </returns>
     public bool HasFlag(string key) => flagArgs.Contains(key);
+
+    public FitResult Fits()
+    {
+        if (Positionals.Count < positionalArgs.Count) return FitResult.Failure("Too many mandatory parameters provided");
+        if (Positionals.Count > positionalArgs.Count) return FitResult.Failure("Missing mandatory parameters");
+
+        var failed = new List<(Argument, string)>();
+        var success = true;
+        foreach (var (val, arg) in positionalArgs.Zip(Positionals))
+        {
+            if (!arg.Fits(val))
+            {
+                success = false;
+                failed.Add((arg, val));
+            }
+        }
+        foreach (var (val, arg) in keyedArgs.Zip(Keys))
+        {
+            if (!arg.Fits(val.Value))
+            {
+                success = false;
+                failed.Add((arg, val.Value));
+            }
+        }
+        foreach (var (val, arg) in flagArgs.Zip(Flags))
+        {
+            if (!arg.Fits(val))
+            {
+                success = false;
+                failed.Add((arg, val));
+            }
+        }
+        return !success
+            ? FitResult.Failure(failed, "Wrong arguments values")
+            : FitResult.Success();
+    }
 
     public void LoadArgs(IEnumerable<string> args)
     {
@@ -102,67 +161,5 @@ public class ArgumentsHandler
             }
         }
         positionalArgs.AddRange(listArgs);
-    }
-
-    public bool Valid() => Positionals.Count == positionalArgs.Count;
-
-    public struct Argument : IEquatable<Argument>
-    {
-        public readonly object Key { get; init; }
-
-        public readonly string Description { get; init; }
-
-        public static bool operator ==(Argument left, Argument right) => left.Equals(right);
-
-        public static bool operator !=(Argument left, Argument right) => !(left == right);
-
-        public bool Equals(Argument other) => Key.Equals(other.Key);
-
-        public override bool Equals(object? obj) => obj is Argument argument && Equals(argument);
-
-        public override int GetHashCode() => base.GetHashCode();
-
-        public override string ToString() => Key + "\t" + Description;
-    }
-
-    public class Builder
-    {
-        private readonly ArgumentsHandler handler;
-
-        public Builder()
-        {
-            handler = new ArgumentsHandler();
-        }
-
-        public static implicit operator ArgumentsHandler(Builder builder) => builder.Build();
-
-        public Builder Positional(string description = "")
-        {
-            var arg = new Argument() { Key = handler.Positionals.Count, Description = description };
-            handler.Positionals.Add(arg);
-            return this;
-        }
-
-        public Builder Keyed(string key, string description = "")
-        {
-            var arg = new Argument() { Key = key, Description = description };
-            handler.Keys.Add(arg);
-            return this;
-        }
-
-        public Builder Print(Func<ArgumentsHandler, string> callback)
-        {
-            handler.printCallback = callback;
-            return this;
-        }
-
-        public Builder Flag(string flag, string description = "")
-        {
-            var arg = new Argument() { Key = flag, Description = description };
-            handler.Flags.Add(arg);
-            return this;
-        }
-
-        public ArgumentsHandler Build() => handler;
     }
 }

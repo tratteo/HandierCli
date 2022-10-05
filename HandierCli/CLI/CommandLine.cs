@@ -1,23 +1,24 @@
 ﻿// Copyright Matteo Beltrame
 
-using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace HandierCli;
+namespace HandierCli.CLI;
 
-public class CommandLine
+public partial class CommandLine
 {
     private readonly List<Command> commands;
 
     private readonly List<string> exitCommands;
 
-    private Action<CommandLineLogger, string>? onUnrecognized;
+    private Action<Logger, string>? onUnrecognized;
 
     private string symbol;
 
     private bool canReceiveCommands;
+    private string? globalHelpSymbol;
+    private ConsoleColor helpColor;
 
-    public CommandLineLogger Logger { get; private set; }
+    public Logger CliLogger { get; private set; }
 
     public bool IsExecutingCommand { get; private set; } = false;
 
@@ -25,8 +26,10 @@ public class CommandLine
 
     private CommandLine()
     {
-        Logger = new CommandLineLogger(this);
+        CliLogger = new Logger(this);
+        helpColor = ConsoleColor.DarkGray;
         canReceiveCommands = true;
+        globalHelpSymbol = null;
         commands = new List<Command>();
         exitCommands = new List<string>();
         symbol = "> ";
@@ -34,8 +37,18 @@ public class CommandLine
 
     public static Builder Factory() => new();
 
-    public CommandLine Register(Command command)
+    /// <summary>
+    ///   Register a new <see cref="Command.Builder"/>
+    /// </summary>
+    /// <param name="command"> </param>
+    /// <returns> </returns>
+    public CommandLine Register(Command.Builder command)
     {
+        if (!string.IsNullOrWhiteSpace(globalHelpSymbol))
+        {
+            command.HelpFlag(globalHelpSymbol);
+        }
+        command.HelpLogger(CliLogger, helpColor);
         if (!commands.Contains(command))
         {
             commands.Add(command);
@@ -54,12 +67,17 @@ public class CommandLine
         }
     }
 
+    /// <summary>
+    ///   Run the CLI asynchronously
+    /// </summary>
+    /// <returns> </returns>
     public async Task RunAsync()
     {
         IsRunning = true;
         var command = string.Empty;
         while (!ShouldExit(command))
         {
+            if (!canReceiveCommands) continue;
             if (canReceiveCommands)
             {
                 Console.Write(symbol);
@@ -67,11 +85,7 @@ public class CommandLine
             command = Console.ReadLine();
             command ??= string.Empty;
             command = command.Trim();
-            if (!canReceiveCommands) continue;
-            if (ShouldExit(command))
-            {
-                return;
-            }
+            if (ShouldExit(command)) return;
             var argsList = ParseString(command);
             if (argsList != null && argsList.Length > 0)
             {
@@ -79,7 +93,7 @@ public class CommandLine
                 if (routine == null)
                 {
                     IsExecutingCommand = true;
-                    onUnrecognized?.Invoke(Logger, argsList[0]);
+                    onUnrecognized?.Invoke(CliLogger, argsList[0]);
                     IsExecutingCommand = false;
                 }
                 else
@@ -93,6 +107,10 @@ public class CommandLine
         IsRunning = false;
     }
 
+    /// <summary>
+    ///   Print the CLI, displays all the registerd commands and their usage
+    /// </summary>
+    /// <returns> </returns>
     public string Print()
     {
         StringBuilder builder = new();
@@ -145,73 +163,4 @@ public class CommandLine
     }
 
     private bool ShouldExit(string command) => exitCommands.Contains(command);
-
-    public class Builder
-    {
-        private readonly CommandLine commandLine;
-
-        public Builder()
-        {
-            commandLine = new CommandLine();
-        }
-
-        public static implicit operator CommandLine(Builder builder) => builder.Build();
-
-        public Builder ExitOn(params string[] exitCommands)
-        {
-            commandLine.exitCommands.AddRange(exitCommands);
-            return this;
-        }
-
-        public Builder CliSymbol(string symbol)
-        {
-            commandLine.symbol = symbol;
-            return this;
-        }
-
-        public Builder RegisterHelpCommand(Command? helpCommandOverride = null)
-        {
-            helpCommandOverride ??= Command.Factory("help")
-                    .InhibitHelp()
-                    .Description("display the available commands")
-                    .ArgumentsHandler(ArgumentsHandler.Factory())
-                    .Add((handler) => commandLine.Logger.Log(LogLevel.Information, commandLine.Print()));
-            commandLine.Register(helpCommandOverride);
-            return this;
-        }
-
-        public Builder OnUnrecognized(Action<CommandLineLogger, string> callback)
-        {
-            commandLine.onUnrecognized = callback;
-            return this;
-        }
-
-        public CommandLine Build() => commandLine;
-    }
-
-    public class CommandLineLogger : BaseLogger
-    {
-        private readonly CommandLine cli;
-
-        public CommandLineLogger(CommandLine cli)
-        {
-            this.cli = cli;
-        }
-
-        protected override void Log(string log, ConsoleColor color, bool newLine = true)
-        {
-            if (!cli.IsExecutingCommand && cli.IsRunning && cli.canReceiveCommands)
-            {
-                ConsoleExtensions.ClearConsoleLine();
-                base.Log(log, color, newLine);
-                if (!newLine) System.Console.WriteLine();
-                Console.Write(cli.symbol);
-                Console.Out.Flush();
-            }
-            else
-            {
-                base.Log(log, color, newLine);
-            }
-        }
-    }
 }

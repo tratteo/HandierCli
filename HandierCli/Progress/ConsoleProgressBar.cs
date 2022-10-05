@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace HandierCli;
+namespace HandierCli.Progress;
 
 /// <summary>
 ///   Console progress bar. Credits to Daniel Wolf, MIT License
