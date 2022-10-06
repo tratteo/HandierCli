@@ -84,7 +84,8 @@ public partial class Command : IEquatable<Command>
         }
         else
         {
-            StringBuilder builder = new(Key);
+            StringBuilder builder = new("█ ");
+            builder.Append(Key);
             builder.Append('\t').Append(Description);
             if (argsHandler != null) builder.Append("\n" + argsHandler.Print());
             return builder.ToString();

@@ -4,17 +4,29 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>$(VersionPrefix)1.2.1</Version>
+    <Version>$(VersionPrefix)1.2.2</Version>
     <Authors>tratteo</Authors>
     <Description>A package that allows for fast creation of command line interfaces functionalities</Description>
     <RepositoryUrl>https://github.com/tratteo/HandierCli</RepositoryUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>tool;commandline;library;utility</PackageTags>
   </PropertyGroup>
 
 
   <ItemGroup>
+    <None Include="..\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 
