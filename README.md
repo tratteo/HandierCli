@@ -9,7 +9,7 @@ A package that allows for fast creation of command line interface functionalitie
 -----
 
 ## Quick Start
-
+  [CLI](#cli)
 - [Creating the CLI](#creating-the-cli)
 - [Commands](#commands)
   - [Command callbacks](#command-callbacks)
@@ -18,8 +18,14 @@ A package that allows for fast creation of command line interface functionalitie
     - [Optional arguments](#optional-arguments)
     - [Flags](#flag-arguments)
     - [Domains](#arguments-domain)
+    
+ [Console progress](#console-progress)
+ - [Progress bar](#progress-bar)
+ - [Spinner](#spinner)
 
-### Creating the CLI
+### CLI
+
+#### Creating the CLI
 
 ```c#
 // Create the CLI with a builder pattern, use Intellisense for more methods
@@ -157,4 +163,108 @@ cli.Register(Command.Factory("usefulcmd")
         string arg1 = handler.GetPositional(1);
         // Useful code goes here, argument values are assured to be contained into the defined domain
     }));
+```
+
+------------
+
+### Console progress
+HandierCli also provides some useful constructs to easily manage progress report in the console.
+
+#### Progress bar
+Progress bar is used to report works that are able to report a progress in the interval `[0, 1]`.
+The following example shows how to create and use the progress bar:
+```c#
+var bar = ConsoleProgressBar.Factory()
+    // Customize the style :D
+    .Style('X', ' ', '[', ']')
+    // Set the lenght
+    .Lenght(50)
+    // Start the progress bar rendering as soon as the Build() is called otherwise it can be started when wanted with Start()
+    .StartOnBuild()
+    // Extremely long but very cool shark animation :D
+    .Spinner(8, "||\\________|",
+                "|_|\\_______|",
+                "|__|\\______|",
+                "|___|\\_____|",
+                "|____|\\____|",
+                "|_____|\\___|",
+                "|______|\\__|",
+                "|_______|\\_|",
+                "|________|\\|",
+                "|________/||",
+                "|_______/|_|",
+                "|______/|__|",
+                "|_____/|___|",
+                "|____/|____|",
+                "|___/|_____|",
+                "|__/|______|",
+                "|_/|_______|",
+                "|/|________|")
+    .Build();
+
+// Progress bar implements IDisposable, otherwise dispose it manually with Dispose()
+using (bar)
+{
+    int length = 100;
+    for (int i = 0; i < length; i++)
+    {
+        bar.Report((float)i / (length - 1));
+        await Task.Delay(50);
+    }
+}
+```
+
+#### Spinner
+The spinner is used to show the user that a job is working, whenever a progress value is not available.
+The following examples show how to use the spinner class:
+```c#
+// Build the spinner
+var spinner = ConsoleSpinner.Factory()
+    // Set the default info text
+    .Info("I am doing a very heavy job X(   ")
+    // Set the default completed text
+    .Completed("Done :D")
+    .Frames(12, "|o        |",
+                "| o       |",
+                "|  o      |",
+                "|   o     |",
+                "|    o    |",
+                "|     o   |",
+                "|      o  |",
+                "|       o |",
+                "|        o|",
+                "|       o |",
+                "|      o  |",
+                "|     o   |",
+                "|    o    |",
+                "|   o     |",
+                "|  o      |",
+                "| o       |")
+    .Build();
+
+using (spinner)
+{
+    spinner.Start();
+    await Task.Delay(2000);
+    spinner.Completed();
+
+    await Task.Delay(500);
+
+    // Await a dummy task
+    await spinner.Await(Task.Run(async () => await Task.Delay(2000)));
+
+    await Task.Delay(500);
+
+    // Spinner can await task with return types
+    var res = await spinner.Await(Task.Run(async () =>
+    {
+        // Spinner supports custom reports, overriding the default info text
+        await Task.Delay(1000);
+        spinner.Report("Step 1  ");
+        await Task.Delay(1000);
+        spinner.Report("Step 2  ");
+        await Task.Delay(1000);
+        return 10;
+    }));
+}
 ```
