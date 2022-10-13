@@ -4,6 +4,9 @@ namespace HandierCli.CLI;
 
 public partial class ArgumentsHandler
 {
+    /// <summary>
+    ///   Class defining the result of the call of <see cref="Fits()"/>
+    /// </summary>
     public class FitResult
     {
         public bool Successful { get; init; }
@@ -22,12 +25,28 @@ public partial class ArgumentsHandler
             Reason = string.Empty;
         }
 
+        /// <summary>
+        ///   Create a new success instance
+        /// </summary>
+        /// <returns> </returns>
         public static FitResult Success() => new FitResult() { Successful = true };
 
+        /// <summary>
+        ///   Create a new failure instance
+        /// </summary>
+        /// <returns> </returns>
         public static FitResult Failure(List<(Argument, string)> failed, string reason) => new FitResult() { Successful = false, FailedFits = failed, Reason = reason };
 
+        /// <summary>
+        ///   Create a new failure instance
+        /// </summary>
+        /// <returns> </returns>
         public static FitResult Failure(List<(Argument, string)> failed) => Failure(failed, string.Empty);
 
+        /// <summary>
+        ///   Create a new failure instance
+        /// </summary>
+        /// <returns> </returns>
         public static FitResult Failure(string reason) => Failure(new List<(Argument, string)>(), reason);
     }
 }

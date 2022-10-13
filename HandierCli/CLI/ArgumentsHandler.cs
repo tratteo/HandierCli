@@ -4,6 +4,9 @@ using System.Text;
 
 namespace HandierCli.CLI;
 
+/// <summary>
+///   Class specifying the arguments structure of a generic command
+/// </summary>
 public partial class ArgumentsHandler
 {
     private readonly Dictionary<string, string> keyedArgs;
@@ -35,14 +38,11 @@ public partial class ArgumentsHandler
 
     /// <summary>
     /// </summary>
-    /// <param name="index"> </param>
     /// <returns> The mandatory (positional) argument at the specified index </returns>
     public string GetPositional(int index) => positionalArgs[index];
 
     /// <summary>
     /// </summary>
-    /// <param name="key"> </param>
-    /// <param name="value"> </param>
     /// <returns> Whether the key could be retrieved </returns>
     public bool TryGetKeyed(string key, out string value)
     {
@@ -95,10 +95,12 @@ public partial class ArgumentsHandler
 
     /// <summary>
     /// </summary>
-    /// <param name="key"> </param>
     /// <returns> Whether the flag is present </returns>
     public bool HasFlag(string key) => flagArgs.Contains(key);
 
+    /// <summary>
+    /// </summary>
+    /// <returns> Whether the arguments loaded with <see cref="LoadArgs(IEnumerable{string})"/> satisfy the structure of the handler </returns>
     public FitResult Fits()
     {
         if (Positionals.Count < positionalArgs.Count) return FitResult.Failure("Too many mandatory parameters provided");
@@ -135,6 +137,9 @@ public partial class ArgumentsHandler
             : FitResult.Success();
     }
 
+    /// <summary>
+    ///   Load the specified args into the handler, building the various argument types
+    /// </summary>
     public void LoadArgs(IEnumerable<string> args)
     {
         keyedArgs.Clear();

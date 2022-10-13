@@ -9,7 +9,7 @@ public partial class CommandLine
         private readonly CommandLine commandLine;
         private Command.Builder? helpCommandOverride;
 
-        public Builder()
+        internal Builder()
         {
             commandLine = new CommandLine();
         }
@@ -19,7 +19,6 @@ public partial class CommandLine
         /// <summary>
         ///   Define custom string that can be used to close the CLI
         /// </summary>
-        /// <param name="exitCommands"> </param>
         /// <returns> </returns>
         public Builder ExitOn(params string[] exitCommands)
         {
@@ -30,7 +29,6 @@ public partial class CommandLine
         /// <summary>
         ///   Define the symbol that is printed at each line
         /// </summary>
-        /// <param name="symbol"> </param>
         /// <returns> </returns>
         public Builder CliSymbol(string symbol)
         {
@@ -42,7 +40,6 @@ public partial class CommandLine
         ///   Set a global help symbol, overrides the internal help symbol for all the registered <see cref="Command"/>, so that each one of
         ///   them has the same flag
         /// </summary>
-        /// <param name="symbol"> </param>
         /// <returns> </returns>
         public Builder GlobalHelpSymbol(string symbol)
         {
@@ -53,8 +50,6 @@ public partial class CommandLine
         /// <summary>
         ///   Customize the appearance of the CLI
         /// </summary>
-        /// <param name="symbol"> </param>
-        /// <param name="helpColor"> </param>
         /// <returns> </returns>
         public Builder Customize(string? symbol = null, ConsoleColor? helpColor = null)
         {
@@ -66,7 +61,6 @@ public partial class CommandLine
         /// <summary>
         ///   Register an help command, the default one displays and prints all the registered commands with their usage
         /// </summary>
-        /// <param name="helpCommandOverride"> </param>
         /// <returns> </returns>
         public Builder RegisterHelpCommand(Command.Builder? helpCommandOverride = null)
         {
@@ -77,9 +71,8 @@ public partial class CommandLine
         /// <summary>
         ///   Specify a callback to be used when a command is not recognized
         /// </summary>
-        /// <param name="callback"> </param>
         /// <returns> </returns>
-        public Builder OnUnrecognized(Action<Logger, string> callback)
+        public Builder OnUnrecognized(UnrecognizedDelegate callback)
         {
             commandLine.onUnrecognized = callback;
             return this;
