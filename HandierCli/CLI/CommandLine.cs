@@ -4,17 +4,18 @@ using System.Text;
 
 namespace HandierCli.CLI;
 
+public delegate void UnrecognizedDelegate(CommandLine.Logger logger, string arg);
+
 public partial class CommandLine
 {
     private readonly List<Command> commands;
 
     private readonly List<string> exitCommands;
 
-    private Action<Logger, string>? onUnrecognized;
+    private UnrecognizedDelegate? onUnrecognized;
 
     private string symbol;
 
-    private bool canReceiveCommands;
     private string? globalHelpSymbol;
     private ConsoleColor helpColor;
 
@@ -28,19 +29,21 @@ public partial class CommandLine
     {
         CliLogger = new Logger(this);
         helpColor = ConsoleColor.DarkGray;
-        canReceiveCommands = true;
         globalHelpSymbol = null;
         commands = new List<Command>();
         exitCommands = new List<string>();
         symbol = "> ";
     }
 
+    /// <summary>
+    ///   Create a new instance of a command line builder
+    /// </summary>
+    /// <returns> </returns>
     public static Builder Factory() => new();
 
     /// <summary>
     ///   Register a new <see cref="Command.Builder"/>
     /// </summary>
-    /// <param name="command"> </param>
     /// <returns> </returns>
     public CommandLine Register(Command.Builder command)
     {
@@ -56,17 +59,6 @@ public partial class CommandLine
         return this;
     }
 
-    public void CanReceiveCommands(bool state)
-    {
-        canReceiveCommands = state;
-        if (canReceiveCommands)
-        {
-            Console.Out.Flush();
-            Console.WriteLine();
-            Console.Write(symbol);
-        }
-    }
-
     /// <summary>
     ///   Run the CLI asynchronously
     /// </summary>
@@ -77,11 +69,7 @@ public partial class CommandLine
         var command = string.Empty;
         while (!ShouldExit(command))
         {
-            if (!canReceiveCommands) continue;
-            if (canReceiveCommands)
-            {
-                Console.Write(symbol);
-            }
+            Console.Write(symbol);
             command = Console.ReadLine();
             command ??= string.Empty;
             command = command.Trim();
@@ -108,7 +96,7 @@ public partial class CommandLine
     }
 
     /// <summary>
-    ///   Print the CLI, displays all the registerd commands and their usage
+    ///   Prints the <see cref="CommandLine"/>, displays all the registered <see cref="Command"/> and their usage
     /// </summary>
     /// <returns> </returns>
     public string Print()

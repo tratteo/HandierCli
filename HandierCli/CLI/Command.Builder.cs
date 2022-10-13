@@ -11,7 +11,7 @@ public partial class Command
         private readonly Command command;
         private ArgumentsHandler.Builder argBuilder;
 
-        public Builder(string key)
+        internal Builder(string key)
         {
             command = new Command(key);
             argBuilder = new ArgumentsHandler.Builder();
@@ -28,7 +28,6 @@ public partial class Command
         /// <summary>
         ///   Set the <see cref="ArgumentsHandler"/> for the command
         /// </summary>
-        /// <param name="handler"> </param>
         /// <returns> </returns>
         public Builder WithArguments(ArgumentsHandler.Builder handler)
         {
@@ -39,8 +38,6 @@ public partial class Command
         /// <summary>
         ///   Override the help logger for the command, that will be used when printing the help (usage) of the command
         /// </summary>
-        /// <param name="logger"> </param>
-        /// <param name="color"> </param>
         /// <returns> </returns>
         public Builder HelpLogger(AdvancedLogger logger, ConsoleColor? color = null)
         {
@@ -52,9 +49,8 @@ public partial class Command
         /// <summary>
         ///   Override the default print function (usage) for the command
         /// </summary>
-        /// <param name="callback"> </param>
         /// <returns> </returns>
-        public Builder Print(Func<Command, string> callback)
+        public Builder Print(CommandPrintDelegate callback)
         {
             command.printCallback = callback;
             return this;
@@ -63,29 +59,26 @@ public partial class Command
         /// <summary>
         ///   Add an async callback that will be awaited in the internal execution. All async callbacks are executed in parallel
         /// </summary>
-        /// <param name="task"> </param>
         /// <returns> </returns>
-        public Builder AddAsync(Func<ArgumentsHandler, Task> task)
+        public Builder AddAsync(AsyncCommandActionDelegate action)
         {
-            command.asyncActions.Add(task);
+            command.asyncActions.Add(action);
             return this;
         }
 
         /// <summary>
         ///   Add a normal callback to the command. All sync callbacks are executed sequentially
         /// </summary>
-        /// <param name="task"> </param>
         /// <returns> </returns>
-        public Builder Add(Action<ArgumentsHandler> task)
+        public Builder Add(SyncCommandActionDelegate action)
         {
-            command.syncActions.Add(task);
+            command.syncActions.Add(action);
             return this;
         }
 
         /// <summary>
         ///   Define a description for the command
         /// </summary>
-        /// <param name="description"> </param>
         /// <returns> </returns>
         public Builder Description(string description)
         {
@@ -96,7 +89,6 @@ public partial class Command
         /// <summary>
         ///   Define a custom help flag for the command, used to display the usage
         /// </summary>
-        /// <param name="flag"> </param>
         /// <returns> </returns>
         public Builder HelpFlag(string flag)
         {

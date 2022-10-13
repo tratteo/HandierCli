@@ -7,6 +7,10 @@ namespace HandierCli.CLI;
 
 public partial class CommandLine
 {
+    /// <summary>
+    ///   Class inheriting from <see cref="AdvancedLogger"/> that automatically takes care of managing the <see cref="CommandLine"/> symbol
+    ///   when logging
+    /// </summary>
     public class Logger : AdvancedLogger
     {
         private readonly CommandLine cli;
@@ -18,7 +22,7 @@ public partial class CommandLine
 
         public override void Log(string log, ConsoleColor color, bool newLine = true)
         {
-            if (!cli.IsExecutingCommand && cli.IsRunning && cli.canReceiveCommands)
+            if (!cli.IsExecutingCommand && cli.IsRunning)
             {
                 ConsoleExtensions.ClearConsoleLine();
                 base.Log(log, color, newLine);

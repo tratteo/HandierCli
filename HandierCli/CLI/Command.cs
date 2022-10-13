@@ -5,14 +5,21 @@ using System.Text;
 
 namespace HandierCli.CLI;
 
+public delegate string CommandPrintDelegate(Command command);
+
+public delegate Task AsyncCommandActionDelegate(ArgumentsHandler argumentsHandler);
+
+public delegate void SyncCommandActionDelegate(ArgumentsHandler argumentsHandler);
+
 public partial class Command : IEquatable<Command>
 {
-    private readonly List<Func<ArgumentsHandler, Task>> asyncActions;
-    private readonly List<Action<ArgumentsHandler>> syncActions;
+    private readonly List<AsyncCommandActionDelegate> asyncActions;
+    private readonly List<SyncCommandActionDelegate> syncActions;
     private ArgumentsHandler? argsHandler;
     private AdvancedLogger logger;
     private string helpFlag;
-    private Func<Command, string>? printCallback;
+    private CommandPrintDelegate? printCallback;
+
     private ConsoleColor? consoleColor;
 
     public string Description { get; private set; }
@@ -23,8 +30,8 @@ public partial class Command : IEquatable<Command>
     {
         Key = key;
         consoleColor = null;
-        asyncActions = new List<Func<ArgumentsHandler, Task>>();
-        syncActions = new List<Action<ArgumentsHandler>>();
+        asyncActions = new List<AsyncCommandActionDelegate>();
+        syncActions = new List<SyncCommandActionDelegate>();
         argsHandler = null;
         logger = new AdvancedLogger();
         Description = string.Empty;
@@ -36,7 +43,6 @@ public partial class Command : IEquatable<Command>
     /// <summary>
     ///   Execute the command with the provided arguments
     /// </summary>
-    /// <param name="args"> </param>
     /// <returns> </returns>
     public async Task Execute(IEnumerable<string> args)
     {
@@ -92,6 +98,7 @@ public partial class Command : IEquatable<Command>
         }
     }
 
+    /// <inheritdoc/>
     public bool Equals(Command? other) => Key.Equals(other?.Key);
 
     private void WriteLine(string line)
@@ -103,13 +110,6 @@ public partial class Command : IEquatable<Command>
     private async Task ExecuteParallel()
     {
         List<Task> tasks = new();
-        foreach (var action in syncActions)
-        {
-            if (argsHandler != null)
-            {
-                action?.Invoke(argsHandler);
-            }
-        }
         foreach (var del in asyncActions)
         {
             if (del != null && argsHandler != null)
@@ -117,6 +117,14 @@ public partial class Command : IEquatable<Command>
                 tasks.Add(del(argsHandler));
             }
         }
+        foreach (var action in syncActions)
+        {
+            if (argsHandler != null)
+            {
+                action?.Invoke(argsHandler);
+            }
+        }
+
         await Task.WhenAll(tasks);
     }
 }

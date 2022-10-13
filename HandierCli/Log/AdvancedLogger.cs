@@ -5,7 +5,8 @@ using Microsoft.Extensions.Logging;
 namespace HandierCli.Log;
 
 /// <summary>
-///   A <see cref="Console"/> logger that implements <see cref="ILogger"/> and has some more functionalities such as custom color and <see cref="LogLevel"/>
+///   A <see cref="Console"/> logger that implements <see cref="ILogger"/> and has some more functionalities such as custom <see
+///   cref="ConsoleColor"/> and <see cref="LogLevel"/>
 /// </summary>
 public class AdvancedLogger : ILogger
 {

@@ -8,7 +8,7 @@ public partial class ArgumentsHandler
     {
         private readonly ArgumentsHandler handler;
 
-        public Builder()
+        internal Builder()
         {
             handler = new ArgumentsHandler();
         }
@@ -18,8 +18,6 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   Add a mandatory parameter, at the ordered position
         /// </summary>
-        /// <param name="description"> </param>
-        /// <param name="regexPattern"> The regex pattern the mandatory argument must satisfy </param>
         /// <returns> </returns>
         public Builder Mandatory(string description, string? regexPattern = null)
         {
@@ -31,12 +29,10 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   <inheritdoc cref="Mandatory(string, string?)"/>
         /// </summary>
-        /// <param name="description"> </param>
-        /// <param name="allowedValues"> Discrete set of allowed values </param>
         /// <returns> </returns>
-        public Builder Mandatory(string description, string[] allowedValues)
+        public Builder Mandatory(string description, string[] allowedValues, bool caseSensitive = true)
         {
-            var arg = new Argument(handler.Positionals.Count, description, null, allowedValues);
+            var arg = new Argument(handler.Positionals.Count, description, null, caseSensitive, allowedValues);
             handler.Positionals.Add(arg);
             return this;
         }
@@ -44,8 +40,6 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   Add an optional unordered parameter that can be retrieved with the key
         /// </summary>
-        /// <param name="description"> </param>
-        /// <param name="regexPattern"> The regex pattern the mandatory argument must satisfy </param>
         /// <returns> </returns>
         public Builder Keyed(string key, string description, string? regexPattern = null)
         {
@@ -57,12 +51,10 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   <inheritdoc cref=" Keyed(string, string, string?)"/>
         /// </summary>
-        /// <param name="description"> </param>
-        /// <param name="allowedValues"> Discrete set of allowed values </param>
         /// <returns> </returns>
-        public Builder Keyed(string key, string description, string[] allowedValues)
+        public Builder Keyed(string key, string description, string[] allowedValues, bool caseSensitive = true)
         {
-            var arg = new Argument(key, description, null, allowedValues);
+            var arg = new Argument(key, description, null, caseSensitive, allowedValues);
             handler.Keys.Add(arg);
             return this;
         }
@@ -70,8 +62,6 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   Add an unordered flag parameter, that is: it is either present or not
         /// </summary>
-        /// <param name="description"> </param>
-        /// <param name="regexPattern"> The regex pattern the mandatory argument must satisfy </param>
         /// <returns> </returns>
         public Builder Flag(string flag, string description, string? regexPattern = null)
         {
@@ -83,12 +73,10 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   <inheritdoc cref="Flag(string, string, string?)"/>
         /// </summary>
-        /// <param name="description"> </param>
-        /// <param name="allowedValues"> Discrete set of allowed values </param>
         /// <returns> </returns>
-        public Builder Flag(string flag, string description, string[] allowedValues)
+        public Builder Flag(string flag, string description, string[] allowedValues, bool caseSensitive = true)
         {
-            var arg = new Argument(flag, description, null, allowedValues);
+            var arg = new Argument(flag, description, null, caseSensitive, allowedValues);
             handler.Flags.Add(arg);
             return this;
         }
@@ -96,7 +84,6 @@ public partial class ArgumentsHandler
         /// <summary>
         ///   Set a custom print function, used for displaying the structure of the handler. The default is already formatted
         /// </summary>
-        /// <param name="callback"> </param>
         /// <returns> </returns>
         public Builder Print(Func<ArgumentsHandler, string> callback)
         {
@@ -104,6 +91,10 @@ public partial class ArgumentsHandler
             return this;
         }
 
+        /// <summary>
+        ///   Create a new instance of an arguments handler builder
+        /// </summary>
+        /// <returns> </returns>
         public ArgumentsHandler Build() => handler;
     }
 }
